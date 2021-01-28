@@ -26,10 +26,11 @@ class TestTextRank(unittest.TestCase):
 
     def test_rank(self) -> None:
         summaries: List[Tuple[str, float]] = self.textrank.rank(
-            self.text, 3, verbose=False
+            self.text, 3, verbose=False, sort=True
         )
         self.assertEqual(len(summaries), 3)
-        self.assertEqual(summaries[0][0], '트위터, "정보당국에 데이터 분석자료 팔지 않겠다"')
+        self.assertEqual(summaries[0]["sentence"], '트위터, "정보당국에 데이터 분석자료 팔지 않겠다"')
+        self.assertEqual(summaries[0]["rank"], 0)
 
 
 if __name__ == "__main__":
