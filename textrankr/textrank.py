@@ -24,7 +24,9 @@ class TextRank:
             print(summaries)
     """
 
-    def __init__(self, tokenizer: Callable[[str], List[str]], tolerance: float = 0.05) -> None:
+    def __init__(
+        self, tokenizer: Callable[[str], List[str]], tolerance: float = 0.05
+    ) -> None:
         self.tokenizer: Callable[[str], List[str]] = tokenizer
         self.tolerance: float = tolerance
 
@@ -45,7 +47,7 @@ class TextRank:
         graph: Graph = build_sentence_graph(sentences, tolerance=self.tolerance)
 
         # run pagerank
-        pageranks: Dict[Sentence, float] = pagerank(graph, weight='weight')
+        pageranks: Dict[Sentence, float] = pagerank(graph, weight="weight")
 
         # get top-k sentences
         sentences = sorted(pageranks, key=pageranks.get, reverse=True)
@@ -55,6 +57,35 @@ class TextRank:
         # return summaries
         summaries = [sentence.text for sentence in sentences]
         if verbose:
-            return '\n'.join(summaries)
+            return "\n".join(summaries)
         else:
             return summaries
+
+    def rank(self, text: str, num_sentences: int = None, verbose: bool = True):
+        """
+            Rank sentences in given text, using the textrank algorithm.
+
+            Args:
+                text: a raw text to be summarized.
+                num_sentences: number of sentences in the summarization results.
+                verbose: if True, it will return a summarized raw text, otherwise it will return a list of sentence texts.
+        """
+
+        # parse text
+        sentences: List[Sentence] = parse_text_into_sentences(text, self.tokenizer)
+
+        if not num_sentences:
+            num_sentences = len(sentences)
+
+        # build graph
+        graph: Graph = build_sentence_graph(sentences, tolerance=self.tolerance)
+
+        # run pagerank
+        pageranks: Dict[Sentence, float] = pagerank(graph, weight="weight")
+
+        # get top-k sentences
+        sentences = [(k.text, v) for k, v in pageranks.items()]
+        sentences = sorted(sentences, key=lambda x: x[1], reverse=True)
+        sentences = sentences[:num_sentences]
+
+        return sentences
