@@ -1,13 +1,14 @@
 from typing import List
 from typing import Dict
 from typing import Callable
+from typing import Union
 
 from networkx import Graph
 from networkx import pagerank
 
 from .sentence import Sentence
 
-from .utils import parse_text_into_sentences
+from .utils import parse_text_into_sentences, parse_candidates_to_sentences
 from .utils import build_sentence_graph
 
 
@@ -30,7 +31,9 @@ class TextRank:
         self.tokenizer: Callable[[str], List[str]] = tokenizer
         self.tolerance: float = tolerance
 
-    def summarize(self, text: str, num_sentences: int = 3, verbose: bool = True):
+    def summarize(
+        self, text: Union[str, List], num_sentences: int = 3, verbose: bool = True
+    ):
         """
             Summarizes the given text, using the textrank algorithm.
 
@@ -41,7 +44,12 @@ class TextRank:
         """
 
         # parse text
-        sentences: List[Sentence] = parse_text_into_sentences(text, self.tokenizer)
+        if isinstance(text, str):
+            sentences: List[Sentence] = parse_text_into_sentences(text, self.tokenizer)
+        elif isinstance(text, list):
+            sentences: List[Sentence] = parse_candidates_to_sentences(
+                text, self.tokenizer
+            )
 
         # build graph
         graph: Graph = build_sentence_graph(sentences, tolerance=self.tolerance)
@@ -61,7 +69,13 @@ class TextRank:
         else:
             return summaries
 
-    def rank(self, text: str, num_sentences: int = None, verbose: bool = True):
+    def rank(
+        self,
+        text: Union[str, List],
+        num_sentences: int = None,
+        sort: bool = True,
+        verbose: bool = True,
+    ):
         """
             Rank sentences in given text, using the textrank algorithm.
 
@@ -72,7 +86,12 @@ class TextRank:
         """
 
         # parse text
-        sentences: List[Sentence] = parse_text_into_sentences(text, self.tokenizer)
+        if isinstance(text, str):
+            sentences: List[Sentence] = parse_text_into_sentences(text, self.tokenizer)
+        elif isinstance(text, list):
+            sentences: List[Sentence] = parse_candidates_to_sentences(
+                text, self.tokenizer
+            )
 
         if not num_sentences:
             num_sentences = len(sentences)
@@ -84,8 +103,19 @@ class TextRank:
         pageranks: Dict[Sentence, float] = pagerank(graph, weight="weight")
 
         # get top-k sentences
-        sentences = [(k.text, v) for k, v in pageranks.items()]
-        sentences = sorted(sentences, key=lambda x: x[1], reverse=True)
+        sentences = [
+            {"sentence": k.text, "index": k.index, "score": v}
+            for i, (k, v) in enumerate(pageranks.items())
+        ]
+        scores = list(pageranks.values())
+        ranks = sorted(range(len(scores)), key=scores.__getitem__, reverse=True)
+
+        # Insert rank of each sentence
+        for sentence, rank in zip(sentences, ranks):
+            sentence.update({"rank": rank})
+
+        if sort:
+            sentences = sorted(sentences, key=lambda x: x["score"], reverse=True)
         sentences = sentences[:num_sentences]
 
         return sentences

@@ -44,6 +44,24 @@ def parse_text_into_sentences(text: str, tokenizer: Callable[[str], List[str]]) 
     return sentences
 
 
+def parse_candidates_to_sentences(candidates: list, tokenizer: Callable[[str], List[str]]) -> List[Sentence]:
+
+    # init
+    index: int = 0
+    sentences: List[Sentence] = []
+
+    for candidate in candidates:
+        # create sentence
+        tokens:  List[str] = tokenizer(candidate)
+        bow: Counter = Counter(tokens)
+        sentence = Sentence(index, candidate, bow)
+        sentences.append(sentence)
+        index += 1
+
+    # return
+    return sentences
+
+
 def multiset_jaccard_index(counter1: Counter, counter2: Counter) -> float:
     """
         Calculates the jaccard index between given two multisets.
