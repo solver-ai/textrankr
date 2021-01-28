@@ -10,6 +10,7 @@ from .sentence import Sentence
 
 from .utils import parse_text_into_sentences, parse_candidates_to_sentences
 from .utils import build_sentence_graph
+from .utils import sort_values
 
 
 class TextRank:
@@ -108,7 +109,7 @@ class TextRank:
             for i, (k, v) in enumerate(pageranks.items())
         ]
         scores = list(pageranks.values())
-        ranks = sorted(range(len(scores)), key=scores.__getitem__, reverse=True)
+        ranks = sort_values(scores)
 
         # Insert rank of each sentence
         for sentence, rank in zip(sentences, ranks):

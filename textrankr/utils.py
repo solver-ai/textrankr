@@ -10,7 +10,9 @@ from networkx import Graph
 from .sentence import Sentence
 
 
-def parse_text_into_sentences(text: str, tokenizer: Callable[[str], List[str]]) -> List[Sentence]:
+def parse_text_into_sentences(
+    text: str, tokenizer: Callable[[str], List[str]]
+) -> List[Sentence]:
     """
         This function splits the given text into sentence candidates using a pre-defined splitter,
         then creates a list of sentence instances having bag-of-words, tokenized by the given tokenizer.
@@ -22,11 +24,11 @@ def parse_text_into_sentences(text: str, tokenizer: Callable[[str], List[str]]) 
     sentences: List[Sentence] = []
 
     # parse text
-    candidates: List[str] = split(r'(?:(?<=[^0-9])\.|\n|!|\?)', text)
+    candidates: List[str] = split(r"(?:(?<=[^0-9])\.|\n|!|\?)", text)
     for candidate in candidates:
 
         # cleanse candidate
-        candidate_stripped: str = candidate.strip('. ')
+        candidate_stripped: str = candidate.strip(". ")
         if not len(candidate_stripped):
             continue
         if candidate_stripped in duplication_checker:
@@ -44,7 +46,9 @@ def parse_text_into_sentences(text: str, tokenizer: Callable[[str], List[str]]) 
     return sentences
 
 
-def parse_candidates_to_sentences(candidates: list, tokenizer: Callable[[str], List[str]]) -> List[Sentence]:
+def parse_candidates_to_sentences(
+    candidates: list, tokenizer: Callable[[str], List[str]]
+) -> List[Sentence]:
 
     # init
     index: int = 0
@@ -52,7 +56,7 @@ def parse_candidates_to_sentences(candidates: list, tokenizer: Callable[[str], L
 
     for candidate in candidates:
         # create sentence
-        tokens:  List[str] = tokenizer(candidate)
+        tokens: List[str] = tokenizer(candidate)
         bow: Counter = Counter(tokens)
         sentence = Sentence(index, candidate, bow)
         sentences.append(sentence)
@@ -95,3 +99,12 @@ def build_sentence_graph(sentences: List[Sentence], tolerance: float = 0.05) -> 
 
     # return
     return graph
+
+
+def sort_values(values: List[float], reverse: bool = True) -> List[int]:
+    output = [0] * len(values)
+    for i, x in enumerate(
+        sorted(range(len(values)), key=lambda y: values[y], reverse=reverse)
+    ):
+        output[x] = i
+    return output
