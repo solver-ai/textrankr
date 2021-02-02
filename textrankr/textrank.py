@@ -4,7 +4,7 @@ from typing import Callable
 from typing import Union
 
 from networkx import Graph
-from networkx import pagerank_numpy as pagerank
+from networkx import pagerank_scipy as pagerank
 
 from .sentence import Sentence
 
