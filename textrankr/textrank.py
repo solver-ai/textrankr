@@ -4,6 +4,7 @@ from typing import Callable
 from typing import Union
 
 import math
+import random
 
 from networkx import Graph
 from networkx import pagerank_scipy as pagerank
@@ -129,6 +130,9 @@ class TextRank:
             batched_scores = list()
             num_batches = math.ceil(num_sentences / BATCH_GRAPH_SIZE)
 
+            # Shuffle sentences for fair ranking
+            random.shuffle(sentences)
+
             # Iterate batches
             for i in range(num_batches):
                 start_idx = i * BATCH_GRAPH_SIZE
@@ -159,5 +163,7 @@ class TextRank:
 
         if sort:
             sentences = sorted(sentences, key=lambda x: x["score"], reverse=True)
+        else:
+            sentences = sorted(sentences, key=lambda x: x["index"], reverse=False)
 
         return sentences
