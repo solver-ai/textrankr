@@ -159,6 +159,5 @@ class TextRank:
 
         if sort:
             sentences = sorted(sentences, key=lambda x: x["score"], reverse=True)
-        sentences = sentences[:num_sentences]
 
         return sentences
