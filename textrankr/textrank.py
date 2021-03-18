@@ -105,7 +105,7 @@ class TextRank:
 
         def _batch_pagerank(sentences: list, tolerance: float):
             # build graph
-            graph: Graph = build_sentence_graph(sentences, tolerance=self.tolerance)
+            graph: Graph = build_sentence_graph(sentences, tolerance=tolerance)
 
             # run pagerank
             pageranks: Dict[Sentence, float] = pagerank(graph, weight="weight")
