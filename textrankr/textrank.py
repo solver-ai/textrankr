@@ -3,6 +3,8 @@ from typing import Dict
 from typing import Callable
 from typing import Union
 
+import math
+
 from networkx import Graph
 from networkx import pagerank_scipy as pagerank
 
@@ -11,6 +13,10 @@ from .sentence import Sentence
 from .utils import parse_text_into_sentences, parse_candidates_to_sentences
 from .utils import build_sentence_graph
 from .utils import sort_values
+
+
+SINGLE_GRAPH_SIZE_LIMIT = 750
+BATCH_GRAPH_SIZE = 500
 
 
 class TextRank:
@@ -97,18 +103,54 @@ class TextRank:
         if not num_sentences:
             num_sentences = len(sentences)
 
-        # build graph
-        graph: Graph = build_sentence_graph(sentences, tolerance=self.tolerance)
+        def _batch_pagerank(sentences: list, tolerance: float):
+            # build graph
+            graph: Graph = build_sentence_graph(sentences, tolerance=self.tolerance)
 
-        # run pagerank
-        pageranks: Dict[Sentence, float] = pagerank(graph, weight="weight")
+            # run pagerank
+            pageranks: Dict[Sentence, float] = pagerank(graph, weight="weight")
 
-        # get top-k sentences
-        sentences = [
-            {"sentence": k.text, "index": k.index, "score": v}
-            for i, (k, v) in enumerate(pageranks.items())
-        ]
-        scores = list(pageranks.values())
+            # get scores
+            sentences = [
+                {"sentence": k.text, "index": k.index, "score": v}
+                for i, (k, v) in enumerate(pageranks.items())
+            ]
+            scores = list(pageranks.values())
+
+            return sentences, scores
+
+        if num_sentences <= SINGLE_GRAPH_SIZE_LIMIT:
+            sentences, scores = _batch_pagerank(
+                sentences=sentences, tolerance=self.tolerance
+            )
+            ranks = sort_values(scores)
+        else:
+            batched_sentences = list()
+            batched_scores = list()
+            num_batches = math.ceil(num_sentences / BATCH_GRAPH_SIZE)
+
+            # Iterate batches
+            for i in range(num_batches):
+                start_idx = i * BATCH_GRAPH_SIZE
+                end_idx = (i + 1) * BATCH_GRAPH_SIZE
+
+                # Split sentences to batches
+                _sentences: List[Sentence] = sentences[start_idx:end_idx]
+
+                # Process batch pagerank
+                _sentences, _scores = _batch_pagerank(
+                    sentences=_sentences, tolerance=self.tolerance
+                )
+
+                # Append to batch results
+                batched_sentences.append(_sentences)
+                batched_scores.append(_scores)
+
+            # Flatten batch results
+            sentences = [item for sublist in batched_sentences for item in sublist]
+            scores = [item for sublist in batched_scores for item in sublist]
+
+        # Convert scores to rank
         ranks = sort_values(scores)
 
         # Insert rank of each sentence
