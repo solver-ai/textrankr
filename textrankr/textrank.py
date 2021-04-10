@@ -16,8 +16,8 @@ from .utils import build_sentence_graph
 from .utils import sort_values
 
 
-SINGLE_GRAPH_SIZE_LIMIT = 750
-BATCH_GRAPH_SIZE = 500
+SINGLE_GRAPH_SIZE_LIMIT = 600
+BATCH_GRAPH_SIZE = 400
 
 
 class TextRank:
